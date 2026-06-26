@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Hot Tub</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #faf7f2;
+    --surface: #ffffff;
+    --card: #ffffff;
+    --border: #e8e0d4;
+    --text: #1a1208;
+    --muted: #8a7a65;
+    --safe: #2d8a4e;
+    --warn: #d97706;
+    --danger: #c0392b;
+    --orange: #e8612a;
+    --orange-lt: #fff0ea;
+    --orange-mid: #f5c4a8;
+    --cream: #faf7f2;
+    --brown: #6b4f35;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  /* HEADER */
+  .hero {
+    background: var(--orange);
+    padding: 32px 20px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    bottom: -20px; left: 0; right: 0;
+    height: 40px;
+    background: var(--bg);
+    border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  }
+  .hero-img {
+    font-size: 4rem;
+    line-height: 1;
+    margin-bottom: 6px;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
+  }
+  .hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.9rem; font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.5px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .hero p {
+    color: rgba(255,255,255,0.85);
+    font-size: 0.82rem;
+    margin-top: 4px;
+  }
+
+  /* BODY WRAPPER */
+  .body-wrap {
+    max-width: 540px;
+    margin: 0 auto;
+    padding: 28px 16px 0;
+  }
+
+  /* SECTION LABEL */
+  .section-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.68rem; font-weight: 700;
+    color: var(--orange);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 10px;
+    padding-left: 2px;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 22px 0;
+  }
+
+  /* GRID */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 0;
+  }
+
+  /* INPUT CARD — label on top, button below label, input below that */
+  .input-card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 14px 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  .input-card .field-label {
+    font-size: 0.68rem; font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .how-btn {
+    display: inline-block;
+    background: var(--orange-lt);
+    border: 1.5px solid var(--orange-mid);
+    border-radius: 6px;
+    color: var(--orange);
+    font-size: 0.62rem; font-weight: 700;
+    padding: 3px 8px;
+    cursor: pointer; letter-spacing: 0.04em;
+    margin-bottom: 10px;
+    white-space: nowrap;
+  }
+  .how-btn:hover { background: var(--orange-mid); }
+
+  .input-card input[type="number"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 1.5rem; font-weight: 700;
+    font-family: 'Space Grotesk', sans-serif;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+    -moz-appearance: textfield;
+  }
+  .input-card input[type="number"]::-webkit-outer-spin-button,
+  .input-card input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .input-card input[type="number"]:focus { border-color: var(--orange); }
+
+  .field-unit {
+    font-size: 0.67rem; color: var(--muted);
+    margin-top: 5px;
+  }
+
+  /* BUTTON */
+  #calc-btn {
+    display: block; width: 100%;
+    margin: 22px 0 0;
+    background: var(--orange);
+    border: none; border-radius: 12px;
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.05rem; font-weight: 700;
+    padding: 16px; cursor: pointer;
+    letter-spacing: 0.03em;
+    box-shadow: 0 4px 14px rgba(232,97,42,0.35);
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  #calc-btn:hover { opacity: 0.93; transform: translateY(-1px); }
+  #calc-btn:active { transform: translateY(0); }
+
+  /* ---- RESULTS ---- */
+  #result-panel { display: none; margin-top: 24px; }
+
+  /* SWIM STATUS BANNER */
+  .status-banner {
+    border-radius: 14px; padding: 16px 18px;
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 14px;
+    border: 2px solid;
+  }
+  .status-banner .icon { font-size: 2rem; flex-shrink: 0; }
+  .status-banner .slabel {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.05rem; font-weight: 700;
+  }
+  .status-banner .sub { font-size: 0.78rem; margin-top: 2px; opacity: 0.8; }
+  .status-banner.safe { background: #edfaf3; border-color: #86efac; color: #14532d; }
+  .status-banner.warn { background: #fffbeb; border-color: #fcd34d; color: #78350f; }
+  .status-banner.danger { background: #fff1f2; border-color: #fca5a5; color: #7f1d1d; }
+
+  /* BACTERIA BAR */
+  .bacteria-wrap {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .bar-title {
+    font-size: 0.68rem; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    margin-bottom: 8px;
+  }
+  .bacteria-level {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem; font-weight: 700; margin-bottom: 6px;
+  }
+  .bacteria-bar { height: 10px; border-radius: 5px; background: #f0ece6; overflow: hidden; }
+  .bacteria-fill { height: 100%; border-radius: 5px; transition: width 0.5s ease; }
+  .bact-note { font-size: 0.72rem; color: var(--muted); margin-top: 6px; }
+
+  /* RESULT CARD */
+  .result-card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .result-card h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.75rem; font-weight: 700; color: var(--orange);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    margin-bottom: 12px;
+  }
+
+  /* TREATMENT BOX */
+  .tx-box {
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    border: 2px solid;
+  }
+  .tx-box.tx-action { background: var(--orange-lt); border-color: var(--orange); }
+  .tx-box.tx-warn { background: #fffbeb; border-color: #f59e0b; }
+  .tx-box.tx-danger { background: #fff1f2; border-color: #f87171; }
+  .tx-box.tx-neutral { background: var(--orange-lt); border-color: var(--orange-mid); }
+
+  .tx-label {
+    font-size: 0.62rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 5px;
+  }
+  .tx-box.tx-action .tx-label { color: var(--orange); }
+  .tx-box.tx-warn .tx-label { color: #b45309; }
+  .tx-box.tx-danger .tx-label { color: #b91c1c; }
+  .tx-box.tx-neutral .tx-label { color: var(--brown); }
+
+  .tx-product {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem; font-weight: 700; color: var(--text);
+    margin-bottom: 4px;
+  }
+  .tx-dose {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.6rem; font-weight: 700; line-height: 1.1;
+  }
+  .tx-box.tx-action .tx-dose { color: var(--orange); }
+  .tx-box.tx-warn .tx-dose { color: #b45309; }
+  .tx-box.tx-danger .tx-dose { color: #b91c1c; }
+  .tx-box.tx-neutral .tx-dose { color: var(--brown); }
+
+  .tx-caps { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+  .tx-note {
+    font-size: 0.76rem; color: var(--muted);
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--border);
+    line-height: 1.55;
+  }
+  .tx-note strong { color: var(--text); }
+
+  /* READINGS */
+  .range-row {
+    display: flex; justify-content: space-between;
+    font-size: 0.78rem; padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .range-row:last-child { border-bottom: none; }
+  .range-row .rname { color: var(--muted); }
+  .range-row .rval { font-weight: 600; }
+  .range-row.ok .rval { color: var(--safe); }
+  .range-row.lo .rval { color: var(--warn); }
+  .range-row.hi .rval { color: var(--danger); }
+
+  .all-good {
+    color: var(--safe); font-size: 0.85rem;
+    display: flex; align-items: center; gap: 6px;
+    font-weight: 600; padding: 2px 0;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 1000; align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    padding: 24px 20px 40px;
+    width: 100%; max-width: 540px;
+    max-height: 85vh; overflow-y: auto;
+  }
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 18px;
+  }
+  .modal-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem; font-weight: 700; color: var(--orange);
+  }
+  .modal-close {
+    background: var(--bg); border: 1.5px solid var(--border);
+    border-radius: 8px; color: var(--muted);
+    font-size: 1rem; padding: 4px 10px; cursor: pointer;
+  }
+  .modal-step {
+    display: flex; gap: 12px;
+    margin-bottom: 14px; align-items: flex-start;
+  }
+  .step-num {
+    background: var(--orange-lt);
+    border: 2px solid var(--orange-mid);
+    border-radius: 50%;
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.75rem; font-weight: 700; color: var(--orange);
+    flex-shrink: 0;
+  }
+  .step-body { font-size: 0.83rem; line-height: 1.55; color: #333; }
+  .step-body strong { color: var(--orange); }
+  .step-body em { color: var(--danger); font-style: normal; font-weight: 600; }
+  .modal-note {
+    background: #fffbeb; border: 1.5px solid #fcd34d;
+    border-radius: 10px; padding: 12px 14px;
+    font-size: 0.78rem; color: #78350f; line-height: 1.5;
+    margin-top: 6px;
+  }
+
+  /* FOOTER NOTE */
+  .order-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.85rem; font-weight: 700; color: #e8612a;
+    margin-bottom: 10px;
+  }
+  .order-step {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem; font-weight: 700; color: var(--text);
+    padding: 6px 0 6px 8px;
+    border-left: 3px solid #e8612a;
+    margin-bottom: 6px;
+  }
+  .order-why {
+    font-size: 0.72rem; color: var(--muted);
+    margin-top: 10px; line-height: 1.5;
+    padding-top: 10px; border-top: 1px solid var(--border);
+  }
+  .step-locked {
+    background: #f5f0ea;
+    border: 1.5px dashed #c8b89a;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.85rem; color: var(--muted);
+    font-weight: 600;
+  }
+  .foot-note {
+    font-size: 0.7rem; color: var(--muted); line-height: 1.65;
+    border-top: 1px solid var(--border);
+    padding-top: 14px; margin-top: 24px;
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-img">🛁</div>
+  <h1>Happy Hot Tub</h1>
+  <p>500 gal · ProTeam Spa · Taylor K-1004</p>
+</div>
+
+<div class="body-wrap">
+
+  <!-- CHLORINE -->
+  <div class="section-label" style="color:#b8a000;">🟡 Chlorine</div>
+  <div class="grid-2">
+    <div class="input-card" style="border-color:#c8a800;">
+      <span class="field-label" style="color:#b8a000;">Free Chlorine (FC)</span>
+      <button class="how-btn" style="background:#fffbe6;border-color:#c8a800;color:#b8a000;" onclick="openModal('fc')">▶ HOW TO TEST</button>
+      <input type="number" id="fc" placeholder="0.0" min="0" max="20" step="0.5">
+      <div class="field-unit">ppm</div>
+    </div>
+    <div class="input-card" style="border-color:#c8a800;">
+      <span class="field-label" style="color:#b8a000;">Total Chlorine (TC)</span>
+      <button class="how-btn" style="background:#fffbe6;border-color:#c8a800;color:#b8a000;" onclick="openModal('tc')">▶ HOW TO TEST</button>
+      <input type="number" id="tc" placeholder="0.0" min="0" max="20" step="0.5">
+      <div class="field-unit">ppm</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- pH -->
+  <div class="section-label" style="color:#c0392b;">🔴 pH</div>
+  <div class="input-card" style="max-width:260px;border-color:#c0392b;">
+    <span class="field-label" style="color:#c0392b;">pH Level</span>
+    <button class="how-btn" style="background:#fff0f0;border-color:#c0392b;color:#c0392b;" onclick="openModal('ph')">▶ HOW TO TEST</button>
+    <input type="number" id="ph" placeholder="7.4" min="6.0" max="9.0" step="0.1">
+    <div class="field-unit">target 7.2–7.6</div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ALKALINITY -->
+  <div class="section-label" style="color:#2d7a4f;">🟢 Total Alkalinity</div>
+  <div class="input-card" style="max-width:260px;border-color:#2d7a4f;">
+    <span class="field-label" style="color:#2d7a4f;">R-0009 Drop Count</span>
+    <button class="how-btn" style="background:#f0fff5;border-color:#2d7a4f;color:#2d7a4f;" onclick="openModal('alk')">▶ HOW TO TEST</button>
+    <input type="number" id="alk-drops" placeholder="12" min="0" max="30" step="1" oninput="updateAlkPPM()">
+    <div class="field-unit">drops of R-0009 · target 10–15 drops</div>
+    <div id="alk-ppm-display" style="margin-top:10px; font-family:'Space Grotesk',sans-serif; font-size:1rem; font-weight:700; color:#2d7a4f; display:none;">
+      = <span id="alk-ppm-val"></span> ppm
+    </div>
+  </div>
+
+  <button id="calc-btn" onclick="calculate()">CHECK MY SPA 🌡️</button>
+
+  <!-- RESULTS -->
+  <div id="result-panel">
+
+    <div id="swim-banner" class="status-banner"></div>
+
+    <!-- ORDER BANNER -->
+    <div id="order-banner" style="display:none;background:#fff8f0;border:2px solid #e8612a;border-radius:14px;padding:16px 18px;margin-bottom:14px;"></div>
+
+    <div class="result-card" id="alk-card" style="display:none;">
+      <h3>🟢 Alkalinity Correction</h3>
+      <div id="alk-advice"></div>
+    </div>
+
+    <div class="result-card" id="ph-card" style="display:none;">
+      <h3>🔴 pH Correction</h3>
+      <div id="ph-advice"></div>
+    </div>
+
+    <div class="result-card" id="cl-card" style="display:none;">
+      <h3>🟡 Chlorine Treatment</h3>
+      <div id="cl-advice"></div>
+    </div>
+
+    <div class="bacteria-wrap">
+      <div class="bar-title">☣️ Bacteria Risk</div>
+      <div class="bacteria-level" id="bact-label"></div>
+      <div class="bacteria-bar"><div class="bacteria-fill" id="bact-fill"></div></div>
+      <div class="bact-note" id="bact-note"></div>
+    </div>
+
+    <div class="result-card">
+      <h3>📊 Your Readings</h3>
+      <div id="readings-table"></div>
+    </div>
+
+  </div>
+
+  <div class="foot-note">
+    ⚠️ Always retest after adding chemicals. One chemical at a time — wait 30 min between additions. Never mix chemicals dry. Doses calibrated for 500 gallons using ProTeam Spa product labels.<br>
+    <strong>½ oz = 1 capful = 3 teaspoons</strong>
+  </div>
+
+</div><!-- end body-wrap -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal-body"></div>
+</div>
+
+<script>
+// ---- MODALS ----
+const CL = '#b8a000';
+const PH = '#c0392b';
+const ALK = '#2d7a4f';
+
+function r(num, color) {
+  return '<span style="color:' + color + ';font-weight:700;">' + num + '</span>';
+}
+
+const modals = {
+  fc: {
+    title: '<span style="color:' + CL + ';">🟡 Testing Free Chlorine — K-1004</span>',
+    steps: [
+      { n:1, t:'Collect your sample', d:'Hold the LEFT comparator cell underwater at elbow depth, about 18 inches from the return jet. Fill to the molded fill line.' },
+      { n:2, t:'Add R-0001', d:'Add 5 drops of ' + r('R-0001', CL) + '. Hold bottle vertically. Cap and invert gently to mix. Do not shake.' },
+      { n:3, t:'Add R-0002', d:'Add 5 drops of ' + r('R-0002', CL) + '. Cap and invert gently to mix.' },
+      { n:4, t:'Read the color immediately', d:'Within 30 seconds hold the comparator to natural light. Match the color to the FC scale. That number in ppm is your Free Chlorine. Enter it above.' }
+    ],
+    note: 'Pink/red = chlorine present. No color = zero FC. Read quickly — color fades fast. Ideal FC for hot tubs is 1–3 ppm.'
+  },
+  tc: {
+    title: '<span style="color:' + CL + ';">🟡 Testing Total Chlorine — K-1004</span>',
+    steps: [
+      { n:1, t:'Use the same cell from FC test', d:'Do NOT rinse — R-0001 and R-0002 are already in there.' },
+      { n:2, t:'Add R-0003', d:'Add 5 drops of ' + r('R-0003', CL) + '. Cap and invert gently. Wait 2 full minutes before reading.' },
+      { n:3, t:'Read the color', d:'Match the color to the TC scale on the comparator. That number is your Total Chlorine in ppm. Enter it above.' },
+      { n:4, t:'Rinse the cell thoroughly', d:'Any trace of R-0003 left in the cell will corrupt your next FC test. Rinse several times with clean water.' }
+    ],
+    note: 'TC should always be equal to or higher than FC. The app calculates Combined Chlorine (TC minus FC) for you automatically.'
+  },
+  ph: {
+    title: '<span style="color:' + PH + ';">🔴 Testing pH — K-1004</span>',
+    steps: [
+      { n:1, t:'Turn jets OFF first', d:'Wait 30 minutes after turning jets off. Running jets aerate the water and artificially raise pH readings.' },
+      { n:2, t:'Fill the RIGHT cell', d:'Use the RIGHT comparator cell. Rinse it, then fill to the molded fill line with spa water from elbow depth.' },
+      { n:3, t:'Add R-0014', d:'Add 5 drops of ' + r('R-0014', PH) + '. Hold bottle vertically. Cap and invert gently 3 times. Do not shake.' },
+      { n:4, t:'Read the color', d:'Hold comparator to natural light — not indoor light. Match to the pH scale. Yellow = low, deep red = high, orange = around 7.4. Enter the number above.' }
+    ],
+    note: 'Ideal pH: 7.2–7.6. High pH weakens chlorine. Low pH irritates skin and eyes and can corrode equipment.'
+  },
+  alk: {
+    title: '<span style="color:' + ALK + ';">🟢 Testing Total Alkalinity — K-1004</span>',
+    steps: [
+      { n:1, t:'Fill the sample tube to the 25 mL mark', d:'Use the large tube, rinsed. Fill with spa water from elbow depth.' },
+      { n:2, t:'Add R-0007', d:'Add 2 drops of ' + r('R-0007', ALK) + '. Swirl to mix.' },
+      { n:3, t:'Add R-0008', d:'Add 5 drops of ' + r('R-0008', ALK) + '. Swirl to mix. The sample should turn green.' },
+      { n:4, t:'Add R-0009 one drop at a time', d:'Add ' + r('R-0009', ALK) + ' one drop at a time, swirling and counting after each drop. Stop the moment the color changes from green to red.' },
+      { n:5, t:'Enter your drop count above', d:'Type the number of R-0009 drops into the app. The app calculates the ppm for you — it appears instantly below the input. Example: 12 drops = 120 ppm.' }
+    ],
+    note: 'Stop adding R-0009 the instant the color turns red. One extra drop gives a false low reading. Overshoot? Dump and start over with a fresh sample.'
+  }
+};
+
+function openModal(key) {
+  var m = modals[key];
+  var html = '<div class="modal-header"><div class="modal-title">' + m.title + '</div><button class="modal-close" onclick="closeModal()">Close</button></div>';
+  m.steps.forEach(function(s) {
+    html += '<div class="modal-step"><div class="step-num">' + s.n + '</div><div class="step-body"><strong>' + s.t + '</strong><br>' + s.d + '</div></div>';
+  });
+  if (m.note) html += '<div class="modal-note">💡 ' + m.note + '</div>';
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+function closeModalOutside(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
+
+// ---- HELPERS ----
+function round2(n) { return Math.round(n * 100) / 100; }
+
+function roundCap(oz) {
+  var r = Math.round(oz * 2) / 2;
+  return Math.max(0.5, r);
+}
+
+function capLabel(oz) {
+  var caps = oz / 0.5;
+  var capStr = caps === 1 ? '1 capful' : caps + ' capfuls';
+  return { caps: capStr, tsp: (oz * 6) + ' tsp' };
+}
+
+function txBox(style, product, rawOz, noteHtml) {
+  var oz = roundCap(rawOz);
+  var cl = capLabel(oz);
+  var note = noteHtml ? '<div class="tx-note">' + noteHtml + '</div>' : '';
+  return '<div class="tx-box ' + style + '"><div class="tx-label">Add This</div><div class="tx-product">' + product + '</div><div class="tx-dose">' + oz + ' oz &nbsp;·&nbsp; ' + cl.caps + '</div><div class="tx-caps">' + cl.tsp + ' &nbsp;|&nbsp; 1/2 oz = 1 capful</div>' + note + '</div>';
+}
+
+function statusClass(val, lo, hi) {
+  if (val < lo) return 'lo';
+  if (val > hi) return 'hi';
+  return 'ok';
+}
+
+// ---- LIVE ALK PPM ----
+function updateAlkPPM() {
+  var drops = parseFloat(document.getElementById('alk-drops').value);
+  var display = document.getElementById('alk-ppm-display');
+  var val = document.getElementById('alk-ppm-val');
+  if (!isNaN(drops) && drops > 0) {
+    val.textContent = drops * 10;
+    display.style.display = 'block';
+  } else {
+    display.style.display = 'none';
+  }
+}
+
+// ---- CHLORINE ----
+function calcChlorine(fc, tc, el) {
+  var cc = round2(tc - fc);
+  var html = '';
+
+  if (fc > 5.0) {
+    el.innerHTML = '<div class="tx-box tx-warn"><div class="tx-label">No Chemical Needed</div><div class="tx-product">FC is high — ' + fc + ' ppm</div><div class="tx-note">Leave cover open, run the jets. FC will drop on its own. Retest in 1–2 hours.</div></div>';
+    return;
+  }
+
+  if (fc < 1.0) {
+    var deficit = round2(2.0 - fc);
+    html += txBox('tx-danger', 'ProTeam Spa Di-Chlorine', deficit / 5,
+      'FC is low at ' + fc + ' ppm. This raises it ' + deficit + ' ppm toward the 2 ppm target. Broadcast over surface, run jets 30 min, retest before entering.');
+  }
+
+  if (cc >= 0.5) {
+    html += txBox('tx-warn', 'ProTeam Spa Oxidizing Shock', 3.5,
+      'Combined Chlorine is ' + cc.toFixed(1) + ' ppm — causes odor and irritation. Oxidizing Shock burns it off without raising FC. Broadcast over surface, cover open, run jets 15 min.');
+  }
+
+  if (fc >= 1.0 && fc <= 5.0 && cc < 0.5) {
+    html = '<div class="all-good">Chlorine looks great (FC: ' + fc + ' ppm). No treatment needed.</div>';
+  }
+
+  el.innerHTML = html;
+}
+
+// ---- pH ----
+function calcPH(ph, el) {
+  var html = '';
+  if (ph >= 7.2 && ph <= 7.6) {
+    html = '<div class="all-good">pH is in range (' + ph + '). No treatment needed.</div>';
+  } else if (ph < 7.2) {
+    var rawOz = (7.4 - ph) <= 0.6 ? 1.0 : 2.0;
+    var extra = rawOz > 1.0 ? ' Very low — add 1 cap, retest, then add more if needed.' : '';
+    html = txBox('tx-action', 'ProTeam Spa pH Increaser', rawOz,
+      'pH is low at ' + ph + '. Broadcast over surface with pump running. Circulate 30 min, retest.' + extra);
+  } else {
+    var rawOz2 = ph <= 8.0 ? 0.5 : 1.0;
+    html = txBox('tx-warn', 'ProTeam Spa pH Down', rawOz2,
+      'pH is high at ' + ph + ' — weakens chlorine efficiency. Broadcast with pump running. Circulate 30 min, retest before adding more. Note: pH Down also lowers alkalinity — recheck alkalinity after correcting pH.');
+  }
+  el.innerHTML = html;
+}
+
+// ---- ALKALINITY ----
+function calcAlkalinity(alk, el) {
+  var html = '';
+  if (alk >= 100 && alk <= 150) {
+    html = '<div class="all-good">Alkalinity is in range (' + alk + ' ppm). No treatment needed.</div>';
+  } else if (alk < 100) {
+    var deficit = 125 - alk;
+    html = txBox('tx-action', 'ProTeam Spa Alkalinity Up', (deficit / 48) * 5,
+      'Alkalinity is low at ' + alk + ' ppm — causes pH to swing unpredictably. Broadcast over surface, pump running. Add half first, circulate 30 min, retest, then add the rest if still needed.');
+  } else {
+    var excess = alk - 125;
+    html = txBox('tx-warn', 'ProTeam Spa pH Down', (excess / 10) * 0.5,
+      'Alkalinity is high at ' + alk + ' ppm. pH Down lowers both. Add in 1/2 oz increments, retest between each. After treating, run jets with cover open to let pH recover. Recheck pH when done.');
+  }
+  el.innerHTML = html;
+}
+
+// ---- BACTERIA RISK ----
+function bacteriaRisk(fc, ph, cc) {
+  var score = 0;
+  if (fc < 1.0) score += 60;
+  else if (fc < 2.0) score += 25;
+  else if (fc <= 3.0) score += 5;
+  else if (fc > 5.0) score += 15;
+  if (cc >= 1.0) score += 20;
+  else if (cc >= 0.5) score += 10;
+  if (ph && (ph < 7.0 || ph > 8.0)) score += 20;
+  else if (ph && (ph < 7.2 || ph > 7.6)) score += 8;
+  score = Math.min(score, 100);
+  if (score >= 65) return { label:'HIGH', color:'#c0392b', pct:90, note:'Chlorine is too low to protect the water. Treat before getting in.' };
+  if (score >= 35) return { label:'ELEVATED', color:'#d97706', pct:60, note:'Slightly above normal. Treat your water before your next soak.' };
+  if (score >= 15) return { label:'LOW', color:'#b08a2e', pct:30, note:'Minor imbalance — fine for a soak. Correct chemistry today.' };
+  return { label:'VERY LOW', color:'#2d8a4e', pct:10, note:'Water is well protected. Enjoy your soak.' };
+}
+
+// ---- SWIM STATUS ----
+function swimStatus(fc, ph, bactLabel) {
+  if (fc < 1.0) return { cls:'danger', icon:'⚠️', label:'TREAT BEFORE ENTERING', sub:'Chlorine is too low (' + fc + ' ppm). Quick fix below.' };
+  if (fc > 5.0) return { cls:'warn', icon:'⏳', label:'WAIT A BIT', sub:'Chlorine is a little high (' + fc + ' ppm). Leave cover open for an hour and retest.' };
+  if (bactLabel === 'HIGH') return { cls:'danger', icon:'⚠️', label:'TREAT BEFORE ENTERING', sub:'Water needs attention. Check the treatment below — quick fix.' };
+  if (ph && (ph < 7.0 || ph > 8.0)) return { cls:'warn', icon:'⚠️', label:'CORRECT pH FIRST', sub:'pH is at ' + ph + ' — outside the comfortable range. Adjust before soaking.' };
+  if (bactLabel === 'ELEVATED') return { cls:'warn', icon:'💛', label:'GOOD TO GO — FIX TODAY', sub:'Water is fine for a soak. Correct your chemistry today.' };
+  if (ph && (ph < 7.2 || ph > 7.6)) return { cls:'warn', icon:'💛', label:'GOOD TO GO — FIX SOON', sub:'Chlorine is solid. pH is slightly off (' + ph + ') — fix it today.' };
+  return { cls:'safe', icon:'✅', label:'ALL CLEAR — ENJOY!', sub:'FC: ' + fc + ' ppm · Water is clean and balanced. Have a great soak!' };
+}
+
+// ---- READINGS TABLE ----
+function buildReadings(fc, tc, ph, alk) {
+  var cc = round2(tc - fc);
+  var html = '';
+  function row(name, val, lo, hi, unit) {
+    if (val === '' || isNaN(val)) return '';
+    var sc = statusClass(val, lo, hi);
+    var dot = sc === 'ok' ? '🟢' : sc === 'lo' ? '🟡' : '🔴';
+    return '<div class="range-row ' + sc + '"><span class="rname">' + dot + ' ' + name + '</span><span class="rval">' + val + ' ' + unit + ' [' + lo + '–' + hi + ']</span></div>';
+  }
+  html += row('Free Chlorine', fc, 1, 5, 'ppm');
+  html += row('Total Chlorine', tc, 1, 5, 'ppm');
+  html += row('Combined Chlorine', cc, 0, 0.4, 'ppm');
+  if (ph !== '' && !isNaN(ph)) html += row('pH', ph, 7.2, 7.6, '');
+  if (alk !== '' && !isNaN(alk)) html += row('Total Alkalinity', alk, 100, 150, 'ppm');
+  return html;
+}
+
+// ---- MAIN ----
+function calculate() {
+  var fc = parseFloat(document.getElementById('fc').value);
+  var tc = parseFloat(document.getElementById('tc').value);
+  var ph = parseFloat(document.getElementById('ph').value);
+  var alkDrops = parseFloat(document.getElementById('alk-drops').value);
+  var alk = isNaN(alkDrops) ? NaN : alkDrops * 10;
+
+  if (isNaN(fc) || isNaN(tc)) {
+    alert('Free Chlorine and Total Chlorine are required. pH and Alkalinity are optional.');
+    return;
+  }
+
+  var panel = document.getElementById('result-panel');
+  panel.style.display = 'block';
+
+  var cc = round2(tc - fc);
+  var bact = bacteriaRisk(fc, isNaN(ph) ? null : ph, cc);
+  var swim = swimStatus(fc, isNaN(ph) ? null : ph, bact.label);
+
+  var banner = document.getElementById('swim-banner');
+  banner.className = 'status-banner ' + swim.cls;
+  banner.innerHTML = '<div class="icon">' + swim.icon + '</div><div><div class="slabel">' + swim.label + '</div><div class="sub">' + swim.sub + '</div></div>';
+
+  document.getElementById('bact-label').textContent = bact.label;
+  document.getElementById('bact-label').style.color = bact.color;
+  var fill = document.getElementById('bact-fill');
+  fill.style.width = bact.pct + '%';
+  fill.style.background = bact.color;
+  document.getElementById('bact-note').textContent = bact.note;
+
+  document.getElementById('readings-table').innerHTML = buildReadings(fc, tc, isNaN(ph) ? '' : ph, isNaN(alk) ? '' : alk);
+
+  // Determine what's actually wrong
+  var alkBad = !isNaN(alk) && (alk < 100 || alk > 150);
+  var phBad  = !isNaN(ph)  && (ph < 7.2 || ph > 7.6);
+  var clBad  = (fc < 1.0 || fc > 5.0) || (round2(tc - fc) >= 0.5);
+
+  // Count how many categories need fixing
+  var issueCount = (alkBad ? 1 : 0) + (phBad ? 1 : 0) + (clBad ? 1 : 0);
+  var multipleIssues = issueCount > 1;
+
+  // Show order banner if more than one thing is wrong
+  var orderBanner = document.getElementById('order-banner');
+  if (multipleIssues) {
+    var steps = [];
+    if (alkBad) steps.push('1 — Fix Alkalinity first');
+    if (phBad)  steps.push((alkBad ? '2' : '1') + ' — Then fix pH');
+    if (clBad)  steps.push(issueCount + ' — Then fix Chlorine last');
+    orderBanner.innerHTML =
+      '<div class="order-title">⚠️ Multiple issues found — fix in this order:</div>' +
+      steps.map(function(s) { return '<div class="order-step">' + s + '</div>'; }).join('') +
+      '<div class="order-why">Alkalinity stabilizes pH. pH must be correct before chlorine works properly. Doing them out of order wastes chemicals.</div>';
+    orderBanner.style.display = 'block';
+  } else {
+    orderBanner.style.display = 'none';
+  }
+
+  // ALKALINITY CARD
+  if (!isNaN(alk)) {
+    calcAlkalinity(alk, document.getElementById('alk-advice'));
+    document.getElementById('alk-card').style.display = 'block';
+  } else {
+    document.getElementById('alk-card').style.display = 'none';
+  }
+
+  // pH CARD — if alk is bad, show locked with message instead
+  if (!isNaN(ph)) {
+    if (multipleIssues && alkBad) {
+      document.getElementById('ph-advice').innerHTML = '<div class="step-locked">🔒 Fix alkalinity first, then come back to check pH.</div>';
+    } else {
+      calcPH(ph, document.getElementById('ph-advice'));
+    }
+    document.getElementById('ph-card').style.display = 'block';
+  } else {
+    document.getElementById('ph-card').style.display = 'none';
+  }
+
+  // CHLORINE CARD — if alk or ph is bad, show locked with message
+  if (multipleIssues && (alkBad || phBad)) {
+    document.getElementById('cl-advice').innerHTML = '<div class="step-locked">🔒 Fix alkalinity' + (phBad ? ' and pH' : '') + ' first — then treat chlorine last.</div>';
+  } else {
+    calcChlorine(fc, tc, document.getElementById('cl-advice'));
+  }
+  document.getElementById('cl-card').style.display = 'block';
+
+  try { panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(e) {}
+}
+</script>
+</body>
+</html>
