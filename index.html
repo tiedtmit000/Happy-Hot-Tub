@@ -599,7 +599,7 @@ function calcChlorine(fc, tc, el) {
   var html = '';
 
   if (fc > 5.0) {
-    el.innerHTML = '<div class="tx-box tx-warn"><div class="tx-label">No Chemical Needed</div><div class="tx-product">FC is high — ' + fc + ' ppm</div><div class="tx-note">Leave cover open, run the jets. FC will drop on its own. Retest in 1–2 hours.</div></div>';
+    el.innerHTML = '<div class="tx-box tx-warn"><div class="tx-label">No Chemical Needed</div><div class="tx-product">FC is high at ' + fc + ' ppm</div><div class="tx-note">Leave cover open, run the jets. FC will drop on its own. Retest in 1–2 hours.</div></div>';
     return;
   }
 
@@ -658,11 +658,15 @@ function calcAlkalinity(alk, el) {
 
 // ---- BACTERIA RISK ----
 function bacteriaRisk(fc, ph, cc) {
+  // High FC means bacteria risk is actually near zero — chlorine is doing its job
+  // High FC is a skin/eye irritation risk, not a bacteria risk — handled separately in swim status
+  if (fc > 5.0) {
+    return { label:'VERY LOW', color:'#2d8a4e', pct:10, note:'Chlorine is high — bacteria risk is near zero. Skin/eye irritation is the concern, not bacteria.' };
+  }
   var score = 0;
   if (fc < 1.0) score += 60;
   else if (fc < 2.0) score += 25;
   else if (fc <= 3.0) score += 5;
-  else if (fc > 5.0) score += 15;
   if (cc >= 1.0) score += 20;
   else if (cc >= 0.5) score += 10;
   if (ph && (ph < 7.0 || ph > 8.0)) score += 20;
@@ -677,7 +681,8 @@ function bacteriaRisk(fc, ph, cc) {
 // ---- SWIM STATUS ----
 function swimStatus(fc, ph, bactLabel) {
   if (fc < 1.0) return { cls:'danger', icon:'⚠️', label:'TREAT BEFORE ENTERING', sub:'Chlorine is too low (' + fc + ' ppm). Quick fix below.' };
-  if (fc > 5.0) return { cls:'warn', icon:'⏳', label:'WAIT A BIT', sub:'Chlorine is a little high (' + fc + ' ppm). Leave cover open for an hour and retest.' };
+  if (fc > 5.0 && fc <= 8.0) return { cls:'warn', icon:'💛', label:'ENTER WITH CAUTION', sub:'Chlorine is slightly high (' + fc + ' ppm). May cause mild eye or skin irritation. Limit your soak and retest after.' };
+  if (fc > 8.0) return { cls:'danger', icon:'⚠️', label:'WAIT BEFORE ENTERING', sub:'Chlorine is very high (' + fc + ' ppm). Leave cover open and retest in an hour.' };
   if (bactLabel === 'HIGH') return { cls:'danger', icon:'⚠️', label:'TREAT BEFORE ENTERING', sub:'Water needs attention. Check the treatment below — quick fix.' };
   if (ph && (ph < 7.0 || ph > 8.0)) return { cls:'warn', icon:'⚠️', label:'CORRECT pH FIRST', sub:'pH is at ' + ph + ' — outside the comfortable range. Adjust before soaking.' };
   if (bactLabel === 'ELEVATED') return { cls:'warn', icon:'💛', label:'GOOD TO GO — FIX TODAY', sub:'Water is fine for a soak. Correct your chemistry today.' };
