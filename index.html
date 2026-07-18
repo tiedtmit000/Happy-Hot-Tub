@@ -374,6 +374,88 @@
     font-size: 0.85rem; color: var(--muted);
     font-weight: 600;
   }
+  /* MAINTENANCE REMINDERS */
+  .reminders-wrap {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .reminders-title {
+    font-size: 0.68rem; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    margin-bottom: 10px;
+  }
+  .reminder-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 0; border-bottom: 1px solid var(--border);
+    font-size: 0.8rem;
+  }
+  .reminder-row:last-child { border-bottom: none; }
+  .reminder-label { color: var(--muted); }
+  .reminder-status {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 0.78rem;
+  }
+  .reminder-status.ok { color: #2d8a4e; }
+  .reminder-status.soon { color: #d97706; }
+  .reminder-status.due { color: #c0392b; }
+  .reminder-status.na { color: var(--muted); font-weight: 400; }
+
+  /* HISTORY LOG */
+  .history-wrap {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-top: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .history-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .history-title {
+    font-size: 0.68rem; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.07em;
+  }
+  .history-clear {
+    font-size: 0.65rem; color: var(--muted);
+    background: none; border: 1px solid var(--border);
+    border-radius: 6px; padding: 3px 8px; cursor: pointer;
+  }
+  .history-entry {
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    font-size: 0.78rem;
+  }
+  .history-entry:last-child { border-bottom: none; }
+  .history-date {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 0.75rem; color: var(--orange);
+    margin-bottom: 4px;
+  }
+  .history-readings {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px;
+  }
+  .history-chip {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 2px 7px;
+    font-size: 0.7rem; color: var(--muted);
+  }
+  .history-chip.chip-ok { border-color: #86efac; color: #2d8a4e; }
+  .history-chip.chip-lo { border-color: #fcd34d; color: #b08a2e; }
+  .history-chip.chip-hi { border-color: #fca5a5; color: #c0392b; }
+  .history-action {
+    font-size: 0.72rem; color: var(--muted); margin-top: 4px;
+    font-style: italic;
+  }
+  .history-empty {
+    font-size: 0.78rem; color: var(--muted); text-align: center;
+    padding: 12px 0;
+  }
+
   .foot-note {
     font-size: 0.7rem; color: var(--muted); line-height: 1.65;
     border-top: 1px solid var(--border);
@@ -391,6 +473,12 @@
 </div>
 
 <div class="body-wrap">
+
+  <!-- MAINTENANCE REMINDERS -->
+  <div class="reminders-wrap" id="reminders-wrap" style="display:none;">
+    <div class="reminders-title">📅 Maintenance Status</div>
+    <div id="reminders-content"></div>
+  </div>
 
   <!-- CHLORINE -->
   <div class="section-label" style="color:#b8a000;">🟡 Chlorine</div>
@@ -428,7 +516,7 @@
     <span class="field-label" style="color:#2d7a4f;">R-0009 Drop Count</span>
     <button class="how-btn" style="background:#f0fff5;border-color:#2d7a4f;color:#2d7a4f;" onclick="openModal('alk')">▶ HOW TO TEST</button>
     <input type="number" id="alk-drops" placeholder="12" min="0" max="30" step="1" oninput="updateAlkPPM()">
-    <div class="field-unit">drops of R-0009 · target 10–15 drops</div>
+    <div class="field-unit">drops of R-0009 · target 8–12 drops</div>
     <div id="alk-ppm-display" style="margin-top:10px; font-family:'Space Grotesk',sans-serif; font-size:1rem; font-weight:700; color:#2d7a4f; display:none;">
       = <span id="alk-ppm-val"></span> ppm
     </div>
@@ -471,6 +559,15 @@
       <div id="readings-table"></div>
     </div>
 
+  </div>
+
+  <!-- HISTORY LOG -->
+  <div class="history-wrap" id="history-wrap" style="display:none;">
+    <div class="history-header">
+      <div class="history-title">📋 Check History</div>
+      <button class="history-clear" onclick="clearHistory()">Clear All</button>
+    </div>
+    <div id="history-content"></div>
   </div>
 
   <div class="foot-note">
@@ -599,23 +696,36 @@ function calcChlorine(fc, tc, el) {
   var html = '';
 
   if (fc > 5.0) {
-    el.innerHTML = '<div class="tx-box tx-warn"><div class="tx-label">No Chemical Needed</div><div class="tx-product">FC is high at ' + fc + ' ppm</div><div class="tx-note">Leave cover open, run the jets. FC will drop on its own. Retest in 1–2 hours.</div></div>';
+    el.innerHTML = '<div class="tx-box tx-warn"><div class="tx-label">No Chemical Needed</div><div class="tx-product">FC is high at ' + fc + ' ppm</div><div class="tx-note">Leave cover open, run the jets. FC will drop on its own. Retest in 1 hour.</div></div>';
     return;
   }
 
   if (fc < 1.0) {
-    var deficit = round2(2.0 - fc);
-    html += txBox('tx-danger', 'ProTeam Spa Di-Chlorine', deficit / 5,
-      'FC is low at ' + fc + ' ppm. This raises it ' + deficit + ' ppm toward the 2 ppm target. Broadcast over surface, run jets 30 min, retest before entering.');
+    if (fc <= 0.5) {
+      // At or near zero: use Multi Shock (chlorine + oxidizer + buffer all in one)
+      // Per ProTeam label: shock dose 2 oz per 500 gal
+      html += txBox('tx-danger', 'ProTeam Spa Multi Shock Extra', 2.0,
+        'FC is at ' + fc + ' ppm. Use Multi Shock — it sanitizes, oxidizes waste, clarifies, and buffers pH all in one product. 2 oz per 500 gal is the ProTeam shock dose. Broadcast over surface, cover off, run jets. Wait until FC is 1–3 ppm before entering. Retest in 1–2 hours.');
+    } else {
+      // FC between 0.5 and 1.0: routine top-off with Di-Chlor (primary sanitizer)
+      // Per ProTeam label: maintenance dose 1/2 oz per 500 gal
+      html += txBox('tx-danger', 'ProTeam Spa Di-Chlor', 0.5,
+        'FC is slightly low at ' + fc + ' ppm. Di-Chlor is your primary sanitizer — use it for routine top-offs to stay in the 1–3 ppm range. Broadcast over surface, run jets 30 min, retest before entering.');
+    }
   }
 
   if (cc >= 0.5) {
+    // Use Oxidizing Shock when FC is in range but chloramines are present
+    // Chlorine-free, oxygen-based — more powerful than chlorine for organic waste
+    // Does NOT raise FC. Re-entry in 15 min. Per ProTeam label: 1.5 oz per 200 gal = 3.75 oz per 500 gal
     html += txBox('tx-warn', 'ProTeam Spa Oxidizing Shock', 3.5,
-      'Combined Chlorine is ' + cc.toFixed(1) + ' ppm — causes odor and irritation. Oxidizing Shock burns it off without raising FC. Broadcast over surface, cover open, run jets 15 min.');
+      'Combined Chlorine is ' + cc.toFixed(1) + ' ppm — chloramines causing odor and irritation. Use Oxidizing Shock when FC is in range but water smells or is dull. It is chlorine-free and oxygen-based — will NOT raise FC. Broadcast over surface, cover open, run jets 15 min. Re-entry in 15 min.');
   }
 
-  if (fc >= 1.0 && fc <= 5.0 && cc < 0.5) {
-    html = '<div class="all-good">Chlorine looks great (FC: ' + fc + ' ppm). No treatment needed.</div>';
+  if (fc >= 1.0 && fc <= 3.0 && cc < 0.5) {
+    html = '<div class="all-good">Chlorine is in range (FC: ' + fc + ' ppm). No treatment needed.</div>';
+  } else if (fc > 3.0 && fc <= 5.0 && cc < 0.5) {
+    html = '<div class="all-good" style="color:#b08a2e;">FC is ' + fc + ' ppm — slightly above the 1–3 ppm target but not harmful. No treatment needed, will drop on its own.</div>';
   }
 
   el.innerHTML = html;
@@ -642,14 +752,14 @@ function calcPH(ph, el) {
 // ---- ALKALINITY ----
 function calcAlkalinity(alk, el) {
   var html = '';
-  if (alk >= 100 && alk <= 150) {
+  if (alk >= 80 && alk <= 120) {
     html = '<div class="all-good">Alkalinity is in range (' + alk + ' ppm). No treatment needed.</div>';
   } else if (alk < 100) {
-    var deficit = 125 - alk;
+    var deficit = 100 - alk;
     html = txBox('tx-action', 'ProTeam Spa Alkalinity Up', (deficit / 48) * 5,
-      'Alkalinity is low at ' + alk + ' ppm — causes pH to swing unpredictably. Broadcast over surface, pump running. Add half first, circulate 30 min, retest, then add the rest if still needed.');
+      'Alkalinity is low at ' + alk + ' ppm — causes pH to swing unpredictably. Target is 80–120 ppm per ProTeam. Broadcast over surface, pump running. Add half first, circulate 30 min, retest, then add the rest if still needed.');
   } else {
-    var excess = alk - 125;
+    var excess = alk - 120;
     html = txBox('tx-warn', 'ProTeam Spa pH Down', (excess / 10) * 0.5,
       'Alkalinity is high at ' + alk + ' ppm. pH Down lowers both. Add in 1/2 oz increments, retest between each. After treating, run jets with cover open to let pH recover. Recheck pH when done.');
   }
@@ -665,7 +775,7 @@ function bacteriaRisk(fc, ph, cc) {
   }
   var score = 0;
   if (fc < 1.0) score += 60;
-  else if (fc < 2.0) score += 25;
+  else if (fc < 1.5) score += 25;
   else if (fc <= 3.0) score += 5;
   if (cc >= 1.0) score += 20;
   else if (cc >= 0.5) score += 10;
@@ -681,8 +791,9 @@ function bacteriaRisk(fc, ph, cc) {
 // ---- SWIM STATUS ----
 function swimStatus(fc, ph, bactLabel) {
   if (fc < 1.0) return { cls:'danger', icon:'⚠️', label:'TREAT BEFORE ENTERING', sub:'Chlorine is too low (' + fc + ' ppm). Quick fix below.' };
-  if (fc > 5.0 && fc <= 8.0) return { cls:'warn', icon:'💛', label:'ENTER WITH CAUTION', sub:'Chlorine is slightly high (' + fc + ' ppm). May cause mild eye or skin irritation. Limit your soak and retest after.' };
-  if (fc > 8.0) return { cls:'danger', icon:'⚠️', label:'WAIT BEFORE ENTERING', sub:'Chlorine is very high (' + fc + ' ppm). Leave cover open and retest in an hour.' };
+  if (fc > 3.0 && fc <= 5.0) return { cls:'warn', icon:'💛', label:'ENTER WITH CAUTION', sub:'Chlorine is slightly high (' + fc + ' ppm). May cause mild eye or skin irritation. Limit your soak and retest after.' };
+  if (fc > 5.0 && fc <= 8.0) return { cls:'warn', icon:'⏳', label:'WAIT — CHLORINE HIGH', sub:'FC is ' + fc + ' ppm — above safe entry level. Leave cover open, run jets, retest in 1 hour.' };
+  if (fc > 8.0) return { cls:'danger', icon:'⚠️', label:'DO NOT ENTER', sub:'FC is very high (' + fc + ' ppm). Leave cover open, run jets. Retest in 1–2 hours.' };
   if (bactLabel === 'HIGH') return { cls:'danger', icon:'⚠️', label:'TREAT BEFORE ENTERING', sub:'Water needs attention. Check the treatment below — quick fix.' };
   if (ph && (ph < 7.0 || ph > 8.0)) return { cls:'warn', icon:'⚠️', label:'CORRECT pH FIRST', sub:'pH is at ' + ph + ' — outside the comfortable range. Adjust before soaking.' };
   if (bactLabel === 'ELEVATED') return { cls:'warn', icon:'💛', label:'GOOD TO GO — FIX TODAY', sub:'Water is fine for a soak. Correct your chemistry today.' };
@@ -700,11 +811,11 @@ function buildReadings(fc, tc, ph, alk) {
     var dot = sc === 'ok' ? '🟢' : sc === 'lo' ? '🟡' : '🔴';
     return '<div class="range-row ' + sc + '"><span class="rname">' + dot + ' ' + name + '</span><span class="rval">' + val + ' ' + unit + ' [' + lo + '–' + hi + ']</span></div>';
   }
-  html += row('Free Chlorine', fc, 1, 5, 'ppm');
-  html += row('Total Chlorine', tc, 1, 5, 'ppm');
+  html += row('Free Chlorine', fc, 1, 3, 'ppm');
+  html += row('Total Chlorine', tc, 1, 3, 'ppm');
   html += row('Combined Chlorine', cc, 0, 0.4, 'ppm');
   if (ph !== '' && !isNaN(ph)) html += row('pH', ph, 7.2, 7.6, '');
-  if (alk !== '' && !isNaN(alk)) html += row('Total Alkalinity', alk, 100, 150, 'ppm');
+  if (alk !== '' && !isNaN(alk)) html += row('Total Alkalinity', alk, 80, 120, 'ppm');
   return html;
 }
 
@@ -744,7 +855,7 @@ function calculate() {
   // Determine what's actually wrong
   var alkBad = !isNaN(alk) && (alk < 100 || alk > 150);
   var phBad  = !isNaN(ph)  && (ph < 7.2 || ph > 7.6);
-  var clBad  = (fc < 1.0 || fc > 5.0) || (round2(tc - fc) >= 0.5);
+  var clBad  = (fc < 1.0 || fc > 3.0) || (round2(tc - fc) >= 0.5);
 
   // Count how many categories need fixing
   var issueCount = (alkBad ? 1 : 0) + (phBad ? 1 : 0) + (clBad ? 1 : 0);
@@ -795,7 +906,146 @@ function calculate() {
   document.getElementById('cl-card').style.display = 'block';
 
   try { panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(e) {}
+
+  // Log this check
+  saveCheck({ ts: Date.now(), fc: fc, tc: tc, ph: isNaN(ph) ? null : ph, alk: isNaN(alk) ? null : alk,
+    addedMultiShock: fc <= 0.5, addedDiChlor: fc > 0.5 && fc < 1.0,
+    addedOxShock: round2(tc - fc) >= 0.5 });
+
+  renderReminders();
+  renderHistory();
 }
+
+// ---- LOCALSTORAGE LOG ----
+var LOG_KEY = 'happyHotTub_log_v1';
+
+function getLog() {
+  try { return JSON.parse(localStorage.getItem(LOG_KEY) || '[]'); } catch(e) { return []; }
+}
+
+function saveCheck(entry) {
+  var log = getLog();
+  log.unshift(entry); // newest first
+  if (log.length > 50) log = log.slice(0, 50); // keep last 50
+  try { localStorage.setItem(LOG_KEY, JSON.stringify(log)); } catch(e) {}
+}
+
+function clearHistory() {
+  if (!confirm('Clear all check history?')) return;
+  try { localStorage.removeItem(LOG_KEY); } catch(e) {}
+  renderReminders();
+  renderHistory();
+}
+
+function daysSince(ts) {
+  return (Date.now() - ts) / (1000 * 60 * 60 * 24);
+}
+
+function fmtDate(ts) {
+  var d = new Date(ts);
+  var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return days[d.getDay()] + ' ' + months[d.getMonth()] + ' ' + d.getDate() + ' at ' +
+    d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+
+// ---- REMINDERS ----
+function renderReminders() {
+  var log = getLog();
+  var wrap = document.getElementById('reminders-wrap');
+  var content = document.getElementById('reminders-content');
+  if (!log.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+
+  // Find last events
+  var lastCheck = log[0] ? daysSince(log[0].ts) : null;
+  var lastShock = null; // Multi Shock added
+  var lastDiChlor = null;
+  var lastOxShock = null;
+  var lastFullTest = null; // both pH and alk logged
+
+  log.forEach(function(e) {
+    var d = daysSince(e.ts);
+    if (lastShock === null && e.addedMultiShock) lastShock = d;
+    if (lastDiChlor === null && (e.addedDiChlor || e.addedMultiShock)) lastDiChlor = d;
+    if (lastOxShock === null && e.addedOxShock) lastOxShock = d;
+    if (lastFullTest === null && e.ph !== null && e.alk !== null) lastFullTest = d;
+  });
+
+  function statusChip(days, warnAt, dueAt, neverLabel) {
+    if (days === null) return '<span class="reminder-status na">' + neverLabel + '</span>';
+    var daysLeft = warnAt - days;
+    if (days >= dueAt) return '<span class="reminder-status due">OVERDUE</span>';
+    if (days >= warnAt) return '<span class="reminder-status soon">Due in ' + Math.ceil(dueAt - days) + 'd</span>';
+    return '<span class="reminder-status ok">Good for ' + Math.ceil(warnAt - days) + 'd</span>';
+  }
+
+  function lastCheckedChip(days) {
+    if (days === null) return '<span class="reminder-status na">Never</span>';
+    if (days < 1) return '<span class="reminder-status ok">Today</span>';
+    if (days < 2) return '<span class="reminder-status ok">Yesterday</span>';
+    if (days <= 3) return '<span class="reminder-status soon">' + Math.floor(days) + ' days ago</span>';
+    return '<span class="reminder-status due">' + Math.floor(days) + ' days ago</span>';
+  }
+
+  var html = '';
+  html += '<div class="reminder-row"><span class="reminder-label">Last check</span>' + lastCheckedChip(lastCheck) + '</div>';
+  // Shock weekly per ProTeam guide
+  html += '<div class="reminder-row"><span class="reminder-label">Weekly shock (Multi Shock)</span>' + statusChip(lastShock, 5, 8, 'Not logged yet') + '</div>';
+  // Di-Chlor — check FC every 2-3 days
+  html += '<div class="reminder-row"><span class="reminder-label">Chlorine check (FC)</span>' + statusChip(lastCheck, 2, 4, 'Not checked yet') + '</div>';
+  // Oxidizing shock — weekly alternate
+  html += '<div class="reminder-row"><span class="reminder-label">Oxidizing Shock used</span>' + statusChip(lastOxShock, 5, 8, 'Not logged yet') + '</div>';
+  // Full balance test — pH and alk twice weekly per ProTeam
+  html += '<div class="reminder-row"><span class="reminder-label">Full balance test (pH + alk)</span>' + statusChip(lastFullTest, 3, 5, 'Not done yet') + '</div>';
+
+  content.innerHTML = html;
+}
+
+// ---- HISTORY ----
+function chipClass(val, lo, hi) {
+  if (val === null || val === undefined) return '';
+  if (val < lo) return 'chip-lo';
+  if (val > hi) return 'chip-hi';
+  return 'chip-ok';
+}
+
+function renderHistory() {
+  var log = getLog();
+  var wrap = document.getElementById('history-wrap');
+  var el = document.getElementById('history-content');
+  if (!log.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+
+  var html = '';
+  log.slice(0, 10).forEach(function(e) {
+    var cc = e.tc !== undefined ? round2(e.tc - e.fc) : null;
+    var actions = [];
+    if (e.addedMultiShock) actions.push('Added Multi Shock');
+    if (e.addedDiChlor) actions.push('Added Di-Chlor');
+    if (e.addedOxShock) actions.push('Added Oxidizing Shock');
+
+    html += '<div class="history-entry">';
+    html += '<div class="history-date">' + fmtDate(e.ts) + '</div>';
+    html += '<div class="history-readings">';
+    html += '<span class="history-chip ' + chipClass(e.fc, 1, 3) + '">FC ' + e.fc + '</span>';
+    html += '<span class="history-chip ' + chipClass(e.tc, 1, 3) + '">TC ' + e.tc + '</span>';
+    if (cc !== null) html += '<span class="history-chip ' + chipClass(cc, 0, 0.4) + '">CC ' + cc + '</span>';
+    if (e.ph !== null) html += '<span class="history-chip ' + chipClass(e.ph, 7.2, 7.6) + '">pH ' + e.ph + '</span>';
+    if (e.alk !== null) html += '<span class="history-chip ' + chipClass(e.alk, 80, 120) + '">Alk ' + e.alk + '</span>';
+    html += '</div>';
+    if (actions.length) html += '<div class="history-action">App recommended: ' + actions.join(', ') + '</div>';
+    html += '</div>';
+  });
+
+  el.innerHTML = html;
+}
+
+// Load reminders and history on page open
+window.addEventListener('DOMContentLoaded', function() {
+  renderReminders();
+  renderHistory();
+});
 </script>
 </body>
 </html>
