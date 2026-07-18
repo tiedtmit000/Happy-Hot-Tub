@@ -705,7 +705,7 @@ function calcChlorine(fc, tc, el) {
       // At or near zero: use Multi Shock (chlorine + oxidizer + buffer all in one)
       // Per ProTeam label: shock dose 2 oz per 500 gal
       html += txBox('tx-danger', 'ProTeam Spa Multi Shock Extra', 2.0,
-        'FC is at ' + fc + ' ppm. Use Multi Shock — it sanitizes, oxidizes waste, clarifies, and buffers pH all in one product. 2 oz per 500 gal is the ProTeam shock dose. Broadcast over surface, cover off, run jets. Wait until FC is 1–3 ppm before entering. Retest in 1–2 hours.');
+        'FC is at ' + fc + ' ppm. Multi Shock contains chlorine so you need to wait for it to dissipate. Broadcast over surface, cover off, run jets. Retest in 1-2 hours — you can enter once FC is below 8 ppm. Note: the 15 min re-entry rule is for Oxidizing Shock only (chlorine-free).');
     } else {
       // FC between 0.5 and 1.0: routine top-off with Di-Chlor (primary sanitizer)
       // Per ProTeam label: maintenance dose 1/2 oz per 500 gal
