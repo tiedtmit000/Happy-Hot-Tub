@@ -469,7 +469,7 @@
 <div class="hero">
   <div class="hero-img">🛁</div>
   <h1>Happy Hot Tub</h1>
-  <p>500 gal · ProTeam Spa · Taylor K-1004</p>
+  <p>380 gal · ProTeam Spa · Taylor K-1004</p>
 </div>
 
 <div class="body-wrap">
@@ -571,7 +571,7 @@
   </div>
 
   <div class="foot-note">
-    ⚠️ Always retest after adding chemicals. One chemical at a time — wait 30 min between additions. Never mix chemicals dry. Doses calibrated for 500 gallons using ProTeam Spa product labels.<br>
+    ⚠️ Always retest after adding chemicals. One chemical at a time — wait 30 min between additions. Never mix chemicals dry. Doses calibrated for 380 gallons using ProTeam Spa product labels.<br>
     <strong>½ oz = 1 capful = 3 teaspoons</strong>
   </div>
 
@@ -707,9 +707,10 @@ function calcChlorine(fc, tc, el) {
     return;
   }
 
-  // FC in good range, no chloramines — get in now
+  // FC in good range, no chloramines — get in now, recommend Oxidizing Shock post-soak
   if (fc >= 1.0 && fc <= 3.0 && cc < 0.5) {
     html = '<div class="all-good">Chlorine is good (FC: ' + fc + ' ppm). Water is ready — get in.</div>';
+    html += '<div class="tx-note" style="margin-top:10px;font-size:0.75rem;color:var(--muted);padding:10px 12px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">💡 <strong>After your soak:</strong> add 2.5 oz (5 capfuls) of ProTeam Spa Oxidizing Shock to burn off oils and organic waste. Cover off, jets on, 15 min. Keeps your water clean between checks.</div>';
     el.innerHTML = html;
     return;
   }
@@ -722,20 +723,24 @@ function calcChlorine(fc, tc, el) {
   }
 
   // FC in range but chloramines present — fastest fix: Oxidizing Shock, re-entry in 15 min
+  // Also ideal to use post-soak routinely to burn off what you leave behind
   if (fc >= 1.0 && cc >= 0.5) {
-    html += txBox('tx-warn', 'ProTeam Spa Oxidizing Shock', 3.5,
-      'FC is fine but Combined Chlorine is ' + cc.toFixed(1) + ' ppm — chloramines present. Fastest fix: Oxidizing Shock is chlorine-free, burns off chloramines without changing FC. Broadcast over surface, cover open, run jets 15 min. Re-entry in 15 min.');
+    html += txBox('tx-warn', 'ProTeam Spa Oxidizing Shock', 2.5,
+      'FC is fine but Combined Chlorine is ' + cc.toFixed(1) + ' ppm — chloramines present. Add Oxidizing Shock now, wait 15 min, then get in. It is chlorine-free and will not change FC. Also great to add after every soak to burn off oils, sweat, and organic waste before they become chloramines. Broadcast over surface, cover open, run jets 15 min.');
     el.innerHTML = html;
     return;
   }
 
   // FC slightly low (0.5-1.0) — Di-Chlor top-off
+  // Di-Chlor: 0.76 oz per 380 gal raises ~5 ppm. Calculate exact dose to hit 2 ppm target.
   if (fc > 0.5 && fc < 1.0) {
-    html += txBox('tx-danger', 'ProTeam Spa Di-Chlor', 0.5,
-      'FC is slightly low at ' + fc + ' ppm. Di-Chlor raises it back into the 1-3 ppm range. Broadcast over surface, run jets 30 min, retest before entering.');
+    var diChlорDeficit = round2(2.0 - fc);
+    var diChlorOz = round2((diChlорDeficit / 5) * 0.76);
+    html += txBox('tx-danger', 'ProTeam Spa Di-Chlor', diChlorOz,
+      'FC is low at ' + fc + ' ppm. Calculated dose to reach 2 ppm target: raises FC ' + diChlорDeficit + ' ppm. Broadcast over surface, run jets 30 min, retest before entering.');
     // Also flag chloramines if present
     if (cc >= 0.5) {
-      html += txBox('tx-warn', 'ProTeam Spa Oxidizing Shock', 3.5,
+      html += txBox('tx-warn', 'ProTeam Spa Oxidizing Shock', 2.5,
         'Also add Oxidizing Shock to clear the ' + cc.toFixed(1) + ' ppm of chloramines. Add after Di-Chlor. Re-entry in 15 min after both are added.');
     }
     el.innerHTML = html;
@@ -744,8 +749,8 @@ function calcChlorine(fc, tc, el) {
 
   // FC at or near zero — Multi Shock
   if (fc <= 0.5) {
-    html += txBox('tx-danger', 'ProTeam Spa Multi Shock Extra', 2.0,
-      'FC is at ' + fc + ' ppm. Multi Shock sanitizes, oxidizes, clarifies, and buffers pH all at once. Broadcast over surface, cover off, run jets. Multi Shock contains chlorine — retest in 1-2 hours and enter once FC is below 8 ppm.');
+    html += txBox('tx-danger', 'ProTeam Spa Multi Shock Extra', 1.5,
+      'FC is at ' + fc + ' ppm. Multi Shock sanitizes, oxidizes, clarifies, and buffers pH all at once. Broadcast over surface, cover off, run jets. Hot water and jets dissipate chlorine fast — retest in 30-45 min and enter once FC is below 8 ppm.');
     el.innerHTML = html;
     return;
   }
@@ -754,45 +759,47 @@ function calcChlorine(fc, tc, el) {
 }
 
 // ---- pH ----
-// Target: 7.3 (low-middle of 7.2-7.6 range — your pH runs high so aim low)
-// pH Down: ~0.25 oz per 500 gal lowers pH ~0.2 units
-// pH Up: ~1 oz per 500 gal raises pH ~0.4 units
+// Target: 7.2 (low end of range — pH rises after use so aim low)
+// pH Down: ~0.19 oz per 380 gal lowers pH ~0.2 units
+// pH Up: ~0.76 oz per 380 gal raises pH ~0.4 units
+// Treat pH AFTER your soak — pH rises naturally during use from aeration and body chemistry
 function calcPH(ph, el) {
   var html = '';
   if (ph >= 7.2 && ph <= 7.6) {
     html = '<div class="all-good">pH is in range (' + ph + '). No treatment needed.</div>';
   } else if (ph < 7.2) {
-    var deficit = round2(7.3 - ph);
-    var rawOz = Math.max(0.5, round2((deficit / 0.4) * 1.0));
+    var deficit = round2(7.2 - ph);
+    var rawOz = Math.max(0.5, round2((deficit / 0.4) * 0.76));
     var extra = rawOz > 1.0 ? ' pH very low — add 1 cap at a time, circulate 30 min, retest between additions.' : '';
     html = txBox('tx-action', 'ProTeam Spa pH Increaser', rawOz,
-      'pH is low at ' + ph + '. Targeting 7.3 — the low end of the range. Broadcast over surface with pump running. Circulate 30 min, retest.' + extra);
+      'pH is low at ' + ph + '. Targeting 7.2 — treat after your soak, not before. pH rises naturally during use so it will correct itself somewhat. Broadcast over surface with pump running. Circulate 30 min, retest.' + extra);
   } else {
-    // Target 7.3. pH Down: 0.25 oz per 500 gal lowers ~0.2 units
-    var excess = round2(ph - 7.3);
-    var rawOz2 = Math.max(0.5, round2((excess / 0.2) * 0.25));
+    // Target 7.2. pH Down: 0.25 oz per 380 gal lowers ~0.2 units
+    var excess = round2(ph - 7.2);
+    var rawOz2 = Math.max(0.5, round2((excess / 0.2) * 0.19));
     html = txBox('tx-warn', 'ProTeam Spa pH Down', rawOz2,
-      'pH is high at ' + ph + '. Targeting 7.3 — the low end of the range since your pH tends to run high. Add in 1/2 cap increments, circulate 30 min, retest before adding more. Note: pH Down also lowers alkalinity — recheck alkalinity after.');
+      'pH is high at ' + ph + '. Treat after your soak — pH naturally rises during use so correct it post-soak for best results. Targeting 7.2. Add in 1/2 cap increments, circulate 30 min, retest before adding more. Note: pH Down also lowers alkalinity — recheck alkalinity after.');
   }
   el.innerHTML = html;
 }
 
 // ---- ALKALINITY ----
-// Target: 90 ppm (low-middle of 80-120 — shoot low since pH runs high)
-// Alkalinity Up: 5 oz per 500 gal raises ~48 ppm
-// pH Down to lower alk: 0.5 oz per 500 gal lowers ~10 ppm
+// Target: 90 ppm (low end of 80-120 — shoot low since pH runs high)
+// Alkalinity Up: 5 oz per 380 gal raises ~48 ppm
+// pH Down to lower alk: 0.5 oz per 380 gal lowers ~10 ppm
+// Treat alkalinity AFTER your soak — it's stable enough to wait and doesn't affect safe entry
 function calcAlkalinity(alk, el) {
   var html = '';
   if (alk >= 80 && alk <= 120) {
     html = '<div class="all-good">Alkalinity is in range (' + alk + ' ppm). No treatment needed.</div>';
   } else if (alk < 80) {
     var deficit = 90 - alk;
-    html = txBox('tx-action', 'ProTeam Spa Alkalinity Up', (deficit / 48) * 5,
-      'Alkalinity is low at ' + alk + ' ppm. Targeting 90 ppm — the lower end of the range. Broadcast over surface, pump running. Add half the dose first, circulate 30 min, retest, then add the rest if still needed.');
+    html = txBox('tx-action', 'ProTeam Spa Alkalinity Up', (deficit / 48) * 3.8,
+      'Alkalinity is low at ' + alk + ' ppm. Treat after your soak. Targeting 90 ppm — the low end of the range. Broadcast over surface, pump running. Add half the dose first, circulate 30 min, retest, then add the rest if still needed.');
   } else {
     var excess = alk - 90;
-    html = txBox('tx-warn', 'ProTeam Spa pH Down', (excess / 10) * 0.5,
-      'Alkalinity is high at ' + alk + ' ppm. Targeting 90 ppm — the lower end since your pH runs high. pH Down lowers both pH and alkalinity. Add in 1/2 cap increments only, retest between each addition. Run jets with cover open after treating so pH can recover. Recheck pH when done.');
+    html = txBox('tx-warn', 'ProTeam Spa pH Down', (excess / 10) * 0.38,
+      'Alkalinity is high at ' + alk + ' ppm. Treat after your soak. Targeting 90 ppm. pH Down lowers both pH and alkalinity — add in 1/2 cap increments, retest between each. Run jets with cover open after so pH can recover. Recheck pH when done.');
   }
   el.innerHTML = html;
 }
