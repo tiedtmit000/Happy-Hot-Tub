@@ -559,12 +559,12 @@
       <div id="readings-table"></div>
     </div>
 
-  </div>
+    <!-- POST SOAK CARD -->
+    <div class="result-card" id="post-soak-card" style="display:none;border-color:#2d7a4f;border-width:2px;">
+      <h3 style="color:#2d7a4f;">🛁 After Your Soak</h3>
+      <div id="post-soak-advice"></div>
+    </div>
 
-  <!-- POST SOAK CARD -->
-  <div class="result-card" id="post-soak-card" style="display:none;">
-    <h3>🛁 After Your Soak</h3>
-    <div id="post-soak-advice"></div>
   </div>
 
   <!-- HISTORY LOG -->
@@ -950,6 +950,9 @@ function calculate() {
 
   try { panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(e) {}
 
+  // Post-soak recommendations
+  renderPostSoak(fc, isNaN(ph) ? null : ph, isNaN(alk) ? null : alk);
+
   // Log this check
   saveCheck({ ts: Date.now(), fc: fc, tc: tc, ph: isNaN(ph) ? null : ph, alk: isNaN(alk) ? null : alk,
     addedMultiShock: fc <= 0.5, addedDiChlor: fc > 0.5 && fc < 1.0,
@@ -957,6 +960,51 @@ function calculate() {
 
   renderReminders();
   renderHistory();
+}
+
+// ---- POST SOAK RECOMMENDATIONS ----
+// Always recommend Oxidizing Shock post-soak to burn off organic waste
+// Also flag pH and alkalinity corrections as post-soak tasks
+function renderPostSoak(fc, ph, alk) {
+  var card = document.getElementById('post-soak-card');
+  var el = document.getElementById('post-soak-advice');
+  var html = '';
+
+  // Always recommend Oxidizing Shock after every soak
+  // 2.5 oz / 380 gal = scaled from ProTeam label 1.5 oz / 200 gal treatment dose
+  html += txBox('tx-neutral', 'ProTeam Spa Oxidizing Shock', 2.5,
+    'Add after every soak. Burns off oils, sweat, and organic waste before they become chloramines. Chlorine-free — cover off, jets on, 15 min. Keeps water fresh between checks.');
+
+  // pH correction post-soak
+  if (ph !== null && (ph < 7.2 || ph > 7.6)) {
+    if (ph > 7.6) {
+      var excess = round2(ph - 7.2);
+      var rawOz = Math.max(0.5, round2((excess / 0.2) * 0.19));
+      html += txBox('tx-warn', 'ProTeam Spa pH Down', rawOz,
+        'pH is high at ' + ph + '. Correct after your soak. Targeting 7.2. Add in 1/2 cap increments, circulate 30 min, retest. pH Down also lowers alkalinity — recheck alkalinity after.');
+    } else {
+      var deficit = round2(7.2 - ph);
+      var rawOz2 = Math.max(0.5, round2((deficit / 0.4) * 0.76));
+      html += txBox('tx-action', 'ProTeam Spa pH Increaser', rawOz2,
+        'pH is low at ' + ph + '. Correct after your soak. Targeting 7.2. Broadcast over surface, circulate 30 min, retest.');
+    }
+  }
+
+  // Alkalinity correction post-soak
+  if (alk !== null && (alk < 80 || alk > 120)) {
+    if (alk > 120) {
+      var excess2 = alk - 90;
+      html += txBox('tx-warn', 'ProTeam Spa pH Down', (excess2 / 10) * 0.38,
+        'Alkalinity is high at ' + alk + ' ppm. Correct after your soak. Targeting 90 ppm. Add in 1/2 cap increments, retest between each. Run jets with cover open after so pH can recover.');
+    } else {
+      var deficit2 = 90 - alk;
+      html += txBox('tx-action', 'ProTeam Spa Alkalinity Up', (deficit2 / 48) * 3.8,
+        'Alkalinity is low at ' + alk + ' ppm. Correct after your soak. Targeting 90 ppm. Add half first, circulate 30 min, retest, then add the rest if still needed.');
+    }
+  }
+
+  el.innerHTML = html;
+  card.style.display = 'block';
 }
 
 // ---- LOCALSTORAGE LOG ----
