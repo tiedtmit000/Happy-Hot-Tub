@@ -691,77 +691,108 @@ function updateAlkPPM() {
 }
 
 // ---- CHLORINE ----
+// PRIORITY: fastest safest way to get in the tub
+// FC 1-3 ppm + CC < 0.5 = get in, nothing to do
+// FC 1-3 ppm + CC >= 0.5 = Oxidizing Shock — chlorine-free, re-entry in 15 min (fastest path)
+// FC 0.5-1.0 ppm = Di-Chlor top-off, wait 30 min, retest
+// FC 0-0.5 ppm = Multi Shock, wait until FC < 8 ppm (1-2 hrs)
+// FC > 5 ppm = no chemicals, wait and retest
 function calcChlorine(fc, tc, el) {
   var cc = round2(tc - fc);
   var html = '';
 
+  // FC too high — just wait
   if (fc > 5.0) {
-    el.innerHTML = '<div class="tx-box tx-warn"><div class="tx-label">No Chemical Needed</div><div class="tx-product">FC is high at ' + fc + ' ppm</div><div class="tx-note">Leave cover open, run the jets. FC will drop on its own. Retest in 1 hour.</div></div>';
+    el.innerHTML = '<div class="tx-box tx-warn"><div class="tx-label">No Chemical Needed</div><div class="tx-product">FC is high at ' + fc + ' ppm</div><div class="tx-note">Leave cover open, run the jets. FC drops on its own. Retest in about 1 hour — you can enter under 8 ppm.</div></div>';
     return;
   }
 
-  if (fc < 1.0) {
-    if (fc <= 0.5) {
-      // At or near zero: use Multi Shock (chlorine + oxidizer + buffer all in one)
-      // Per ProTeam label: shock dose 2 oz per 500 gal
-      html += txBox('tx-danger', 'ProTeam Spa Multi Shock Extra', 2.0,
-        'FC is at ' + fc + ' ppm. Multi Shock contains chlorine so you need to wait for it to dissipate. Broadcast over surface, cover off, run jets. Retest in 1-2 hours — you can enter once FC is below 8 ppm. Note: the 15 min re-entry rule is for Oxidizing Shock only (chlorine-free).');
-    } else {
-      // FC between 0.5 and 1.0: routine top-off with Di-Chlor (primary sanitizer)
-      // Per ProTeam label: maintenance dose 1/2 oz per 500 gal
-      html += txBox('tx-danger', 'ProTeam Spa Di-Chlor', 0.5,
-        'FC is slightly low at ' + fc + ' ppm. Di-Chlor is your primary sanitizer — use it for routine top-offs to stay in the 1–3 ppm range. Broadcast over surface, run jets 30 min, retest before entering.');
-    }
-  }
-
-  if (cc >= 0.5) {
-    // Use Oxidizing Shock when FC is in range but chloramines are present
-    // Chlorine-free, oxygen-based — more powerful than chlorine for organic waste
-    // Does NOT raise FC. Re-entry in 15 min. Per ProTeam label: 1.5 oz per 200 gal = 3.75 oz per 500 gal
-    html += txBox('tx-warn', 'ProTeam Spa Oxidizing Shock', 3.5,
-      'Combined Chlorine is ' + cc.toFixed(1) + ' ppm — chloramines causing odor and irritation. Use Oxidizing Shock when FC is in range but water smells or is dull. It is chlorine-free and oxygen-based — will NOT raise FC. Broadcast over surface, cover open, run jets 15 min. Re-entry in 15 min.');
-  }
-
+  // FC in good range, no chloramines — get in now
   if (fc >= 1.0 && fc <= 3.0 && cc < 0.5) {
-    html = '<div class="all-good">Chlorine is in range (FC: ' + fc + ' ppm). No treatment needed.</div>';
-  } else if (fc > 3.0 && fc <= 5.0 && cc < 0.5) {
-    html = '<div class="all-good" style="color:#b08a2e;">FC is ' + fc + ' ppm — slightly above the 1–3 ppm target but not harmful. No treatment needed, will drop on its own.</div>';
+    html = '<div class="all-good">Chlorine is good (FC: ' + fc + ' ppm). Water is ready — get in.</div>';
+    el.innerHTML = html;
+    return;
+  }
+
+  // FC slightly above target but no chloramines — still fine
+  if (fc > 3.0 && fc <= 5.0 && cc < 0.5) {
+    html = '<div class="all-good" style="color:#b08a2e;">FC is ' + fc + ' ppm — slightly above target but safe. Water may feel a little strong. No treatment needed.</div>';
+    el.innerHTML = html;
+    return;
+  }
+
+  // FC in range but chloramines present — fastest fix: Oxidizing Shock, re-entry in 15 min
+  if (fc >= 1.0 && cc >= 0.5) {
+    html += txBox('tx-warn', 'ProTeam Spa Oxidizing Shock', 3.5,
+      'FC is fine but Combined Chlorine is ' + cc.toFixed(1) + ' ppm — chloramines present. Fastest fix: Oxidizing Shock is chlorine-free, burns off chloramines without changing FC. Broadcast over surface, cover open, run jets 15 min. Re-entry in 15 min.');
+    el.innerHTML = html;
+    return;
+  }
+
+  // FC slightly low (0.5-1.0) — Di-Chlor top-off
+  if (fc > 0.5 && fc < 1.0) {
+    html += txBox('tx-danger', 'ProTeam Spa Di-Chlor', 0.5,
+      'FC is slightly low at ' + fc + ' ppm. Di-Chlor raises it back into the 1-3 ppm range. Broadcast over surface, run jets 30 min, retest before entering.');
+    // Also flag chloramines if present
+    if (cc >= 0.5) {
+      html += txBox('tx-warn', 'ProTeam Spa Oxidizing Shock', 3.5,
+        'Also add Oxidizing Shock to clear the ' + cc.toFixed(1) + ' ppm of chloramines. Add after Di-Chlor. Re-entry in 15 min after both are added.');
+    }
+    el.innerHTML = html;
+    return;
+  }
+
+  // FC at or near zero — Multi Shock
+  if (fc <= 0.5) {
+    html += txBox('tx-danger', 'ProTeam Spa Multi Shock Extra', 2.0,
+      'FC is at ' + fc + ' ppm. Multi Shock sanitizes, oxidizes, clarifies, and buffers pH all at once. Broadcast over surface, cover off, run jets. Multi Shock contains chlorine — retest in 1-2 hours and enter once FC is below 8 ppm.');
+    el.innerHTML = html;
+    return;
   }
 
   el.innerHTML = html;
 }
 
 // ---- pH ----
+// Target: 7.3 (low-middle of 7.2-7.6 range — your pH runs high so aim low)
+// pH Down: ~0.25 oz per 500 gal lowers pH ~0.2 units
+// pH Up: ~1 oz per 500 gal raises pH ~0.4 units
 function calcPH(ph, el) {
   var html = '';
   if (ph >= 7.2 && ph <= 7.6) {
     html = '<div class="all-good">pH is in range (' + ph + '). No treatment needed.</div>';
   } else if (ph < 7.2) {
-    var rawOz = (7.4 - ph) <= 0.6 ? 1.0 : 2.0;
-    var extra = rawOz > 1.0 ? ' Very low — add 1 cap, retest, then add more if needed.' : '';
+    var deficit = round2(7.3 - ph);
+    var rawOz = Math.max(0.5, round2((deficit / 0.4) * 1.0));
+    var extra = rawOz > 1.0 ? ' pH very low — add 1 cap at a time, circulate 30 min, retest between additions.' : '';
     html = txBox('tx-action', 'ProTeam Spa pH Increaser', rawOz,
-      'pH is low at ' + ph + '. Broadcast over surface with pump running. Circulate 30 min, retest.' + extra);
+      'pH is low at ' + ph + '. Targeting 7.3 — the low end of the range. Broadcast over surface with pump running. Circulate 30 min, retest.' + extra);
   } else {
-    var rawOz2 = ph <= 8.0 ? 0.5 : 1.0;
+    // Target 7.3. pH Down: 0.25 oz per 500 gal lowers ~0.2 units
+    var excess = round2(ph - 7.3);
+    var rawOz2 = Math.max(0.5, round2((excess / 0.2) * 0.25));
     html = txBox('tx-warn', 'ProTeam Spa pH Down', rawOz2,
-      'pH is high at ' + ph + ' — weakens chlorine efficiency. Broadcast with pump running. Circulate 30 min, retest before adding more. Note: pH Down also lowers alkalinity — recheck alkalinity after correcting pH.');
+      'pH is high at ' + ph + '. Targeting 7.3 — the low end of the range since your pH tends to run high. Add in 1/2 cap increments, circulate 30 min, retest before adding more. Note: pH Down also lowers alkalinity — recheck alkalinity after.');
   }
   el.innerHTML = html;
 }
 
 // ---- ALKALINITY ----
+// Target: 90 ppm (low-middle of 80-120 — shoot low since pH runs high)
+// Alkalinity Up: 5 oz per 500 gal raises ~48 ppm
+// pH Down to lower alk: 0.5 oz per 500 gal lowers ~10 ppm
 function calcAlkalinity(alk, el) {
   var html = '';
   if (alk >= 80 && alk <= 120) {
     html = '<div class="all-good">Alkalinity is in range (' + alk + ' ppm). No treatment needed.</div>';
-  } else if (alk < 100) {
-    var deficit = 100 - alk;
+  } else if (alk < 80) {
+    var deficit = 90 - alk;
     html = txBox('tx-action', 'ProTeam Spa Alkalinity Up', (deficit / 48) * 5,
-      'Alkalinity is low at ' + alk + ' ppm — causes pH to swing unpredictably. Target is 80–120 ppm per ProTeam. Broadcast over surface, pump running. Add half first, circulate 30 min, retest, then add the rest if still needed.');
+      'Alkalinity is low at ' + alk + ' ppm. Targeting 90 ppm — the lower end of the range. Broadcast over surface, pump running. Add half the dose first, circulate 30 min, retest, then add the rest if still needed.');
   } else {
-    var excess = alk - 120;
+    var excess = alk - 90;
     html = txBox('tx-warn', 'ProTeam Spa pH Down', (excess / 10) * 0.5,
-      'Alkalinity is high at ' + alk + ' ppm. pH Down lowers both. Add in 1/2 oz increments, retest between each. After treating, run jets with cover open to let pH recover. Recheck pH when done.');
+      'Alkalinity is high at ' + alk + ' ppm. Targeting 90 ppm — the lower end since your pH runs high. pH Down lowers both pH and alkalinity. Add in 1/2 cap increments only, retest between each addition. Run jets with cover open after treating so pH can recover. Recheck pH when done.');
   }
   el.innerHTML = html;
 }
@@ -791,8 +822,7 @@ function bacteriaRisk(fc, ph, cc) {
 // ---- SWIM STATUS ----
 function swimStatus(fc, ph, bactLabel) {
   if (fc < 1.0) return { cls:'danger', icon:'⚠️', label:'TREAT BEFORE ENTERING', sub:'Chlorine is too low (' + fc + ' ppm). Quick fix below.' };
-  if (fc > 3.0 && fc <= 5.0) return { cls:'warn', icon:'💛', label:'ENTER WITH CAUTION', sub:'Chlorine is slightly high (' + fc + ' ppm). May cause mild eye or skin irritation. Limit your soak and retest after.' };
-  if (fc > 5.0 && fc <= 8.0) return { cls:'warn', icon:'⏳', label:'WAIT — CHLORINE HIGH', sub:'FC is ' + fc + ' ppm — above safe entry level. Leave cover open, run jets, retest in 1 hour.' };
+  if (fc > 3.0 && fc <= 8.0) return { cls:'warn', icon:'💛', label:'SAFE — SLIGHTLY STRONG', sub:'FC is ' + fc + ' ppm. Safe to enter — water may feel a little strong. Mild skin or eye irritation possible.' };
   if (fc > 8.0) return { cls:'danger', icon:'⚠️', label:'DO NOT ENTER', sub:'FC is very high (' + fc + ' ppm). Leave cover open, run jets. Retest in 1–2 hours.' };
   if (bactLabel === 'HIGH') return { cls:'danger', icon:'⚠️', label:'TREAT BEFORE ENTERING', sub:'Water needs attention. Check the treatment below — quick fix.' };
   if (ph && (ph < 7.0 || ph > 8.0)) return { cls:'warn', icon:'⚠️', label:'CORRECT pH FIRST', sub:'pH is at ' + ph + ' — outside the comfortable range. Adjust before soaking.' };
